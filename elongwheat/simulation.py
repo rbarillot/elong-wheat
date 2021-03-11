@@ -25,7 +25,7 @@ from elongwheat import parameters
 HIDDENZONE_INPUTS = ['leaf_is_growing', 'internode_is_growing', 'leaf_pseudo_age', 'internode_pseudo_age', 'leaf_pseudostem_length', 'internode_distance_to_emerge', 'leaf_L', 'internode_L',
                      'hiddenzone_age', 'leaf_Lmax', 'leaf_Lmax_em', 'lamina_Lmax', 'sheath_Lmax', 'leaf_Wmax', 'SSLW', 'LSSW', 'leaf_is_emerged', 'internode_Lmax', 'internode_Lmax_lig', 'LSIW',
                      'internode_is_visible', 'sucrose', 'amino_acids', 'fructan', 'proteins', 'leaf_enclosed_mstruct', 'leaf_enclosed_Nstruct', 'internode_enclosed_mstruct',
-                     'internode_enclosed_Nstruct', 'mstruct', 'is_over', 'mean_conc_sucrose']
+                     'internode_enclosed_Nstruct', 'mstruct', 'is_over', 'mean_conc_sucrose', 'temperature']
 ELEMENT_INPUTS = ['length', 'Wmax', 'is_growing', 'age', 'is_over']
 AXIS_INPUTS = ['SAM_temperature', 'delta_teq', 'teq_since_primordium', 'status', 'nb_leaves', 'GA', 'SAM_height', 'cohort', 'sum_TT']
 
@@ -35,7 +35,7 @@ HIDDENZONE_OUTPUTS = ['leaf_is_growing', 'internode_is_growing', 'leaf_pseudo_ag
                       'hiddenzone_age', 'delta_leaf_pseudostem_length', 'internode_distance_to_emerge',
                       'delta_internode_distance_to_emerge', 'leaf_L', 'delta_leaf_L', 'internode_L', 'delta_internode_L', 'leaf_Lmax', 'leaf_Lmax_em', 'lamina_Lmax', 'sheath_Lmax', 'leaf_Wmax',
                       'SSLW', 'LSSW', 'leaf_is_emerged', 'internode_Lmax', 'internode_Lmax_lig', 'LSIW', 'internode_is_visible', 'sucrose', 'amino_acids', 'fructan', 'proteins',
-                      'leaf_enclosed_mstruct',
+                      'leaf_enclosed_mstruct', 'temperature',
                       'leaf_enclosed_Nstruct', 'internode_enclosed_mstruct', 'internode_enclosed_Nstruct', 'mstruct', 'is_over', 'ratio_DZ',
                       'mean_conc_sucrose', 'leaf_is_remobilizing', 'internode_is_remobilizing']
 ELEMENT_OUTPUTS = ['length', 'Wmax', 'is_growing', 'sucrose', 'amino_acids', 'fructan', 'proteins', 'nitrates', 'starch', 'cytokinins',
@@ -258,6 +258,7 @@ class Simulation(object):
                 curr_axis_outputs = all_axes_outputs[axis_id]
 
                 curr_hiddenzone_outputs['hiddenzone_age'] += curr_axis_outputs['delta_teq']
+                curr_hiddenzone_outputs['temperature'] = curr_axis_outputs['SAM_temperature']
 
                 hidden_sheath_id = hiddenzone_id + tuple(['sheath', 'HiddenElement'])
                 visible_sheath_id = hiddenzone_id + tuple(['sheath', 'StemElement'])
@@ -342,16 +343,9 @@ class Simulation(object):
 
                         curr_hiddenzone_outputs['leaf_pseudo_age'] = leaf_pseudo_age
                         curr_hiddenzone_outputs['delta_leaf_pseudo_age'] = leaf_pseudo_age - hiddenzone_inputs['leaf_pseudo_age']
-
-                        delta_leaf_L = model.calculate_deltaL_postE(hiddenzone_inputs['leaf_pseudo_age'], leaf_pseudo_age, hiddenzone_inputs['leaf_L'], hiddenzone_inputs['leaf_Lmax_em'],
-                                                                    hiddenzone_inputs['sucrose'], hiddenzone_inputs['amino_acids'], hiddenzone_inputs['mstruct'], optimal_growth_option)
-                        leaf_L = hiddenzone_inputs['leaf_L'] + delta_leaf_L
-
-                        # Update leaf_Lmax. Subsequently, lamina_Lmax and sheath_Lmax will be updated depending of each element status (growing or mature)
-                        curr_hiddenzone_outputs['leaf_Lmax'] = model.calculate_update_leaf_Lmax(hiddenzone_inputs['leaf_Lmax_em'], leaf_L, leaf_pseudo_age)
-
-                        # Ratio (mass) of Division Zone in the hiddenzone
-                        curr_hiddenzone_outputs['ratio_DZ'] = model.calculate_ratio_DZ_postE(leaf_L, curr_hiddenzone_outputs['leaf_Lmax'], leaf_pseudostem_length)
+                        leaf_L = hiddenzone_inputs['leaf_L']
+                        #  leaf_L = model.calculate_L_postE(leaf_pseudo_age, curr_hiddenzone_outputs['leaf_Lmax'])  # calculated by turgor growth model now
+                        #  delta_leaf_L = leaf_L - hiddenzone_inputs['leaf_L']
 
                         lamina_id = hiddenzone_id + tuple(['blade', 'LeafElement1'])
                         #: Lamina has not emerged
@@ -516,7 +510,7 @@ class Simulation(object):
 
                 # Update of leaf outputs
                 curr_hiddenzone_outputs['leaf_L'] = leaf_L
-                curr_hiddenzone_outputs['delta_leaf_L'] = delta_leaf_L
+                # curr_hiddenzone_outputs['delta_leaf_L'] = delta_leaf_L  # For turgor
 
                 #: Internode elongation
                 #: Initialisation of internode elongation
