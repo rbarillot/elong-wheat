@@ -95,7 +95,7 @@ class Simulation(object):
 
         #: Update parameters if specified
         if update_parameters:
-            unexpected_arguments = list(set(update_parameters.keys()) - set(parameters.__dict__.keys()))
+            unexpected_arguments = list(set(update_parameters.keys()) - set(parameters.Parameters().__dict__.keys()))
             if len(unexpected_arguments) != 0:
                 warnings.warn('Parameter(s) name {} is not expected and may ne not taken into account'.format(unexpected_arguments))
             parameters.__dict__.update(update_parameters)
@@ -731,9 +731,9 @@ class Simulation(object):
             # Update of coleoptile outputs
             self.outputs['hiddenzone'][coleo_id] = curr_coleoptile_outputs
 
-            #: Test end of elongation (independently of coleptile emergence)
+            #: Test end of elongation (independently of coleoptile emergence)
             if curr_coleoptile_outputs['leaf_L'] >= curr_coleoptile_outputs['leaf_Lmax'] and curr_coleoptile_outputs['leaf_is_growing']:
-                print('end of coleoptile')
+                print('end of coleoptile', curr_coleoptile_outputs['leaf_Lmax'])
                 curr_coleoptile_outputs['leaf_is_growing'] = False
                 curr_coleoptile_outputs['leaf_is_remobilizing'] = True
                 # Update of coleoptile outputs
